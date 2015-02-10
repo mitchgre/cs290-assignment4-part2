@@ -13,6 +13,15 @@ addVideoForm();
 $mysqli = connectToDB();
 drawVideos($mysqli);
 
+function checkDeletions(){
+    $id = array_search('Delete',$_POST); // search post array for the id
+    // echo "Try to delete " . $id . "<br>";
+    $mysqli = connectToDB();
+    $sql = "delete from video_inventory ".
+        "where id = ".$id;
+    $result = $mysqli->query($sql);
+}
+
 
 // handle post requests via mysql
 function checkPostRequests(){
@@ -20,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
     {
         if (! empty($_POST))
             {
+                checkDeletions();
                 if ( isset($_POST["name"]) && $_POST["name"] != null && $_POST["name"] != '')
                     {
                         if ( isset($_POST["category"]) && $_POST["category"] != null)
@@ -53,10 +63,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
                                         $name = $_POST["name"];
                                         $category = "";
                                         $length = "";
-
+                                        
                                     }
                             }
-
+                        
                         $mysqli = connectToDB();
                         $sql = "insert into video_inventory ".
                             "(name,category,length) ".
@@ -68,15 +78,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
                     {
                         echo "You must have a name.";
                     }
-            } // end check for empty post
-    } // end check if server request is post type 
-}
+            } // end check for add video
+    } // end check for empty post
+} // end check if server request is post type 
+
 
 
 // output a form to add videos
 function addVideoForm() {
     echo <<<_END
-<form method ='post' action='video_inventory.php&add=true'>
+<form method ='post' action='video_inventory.php'>
 <table name='addBar'>
  <tr><td>name:</td> <td> <input type='text' name='name'></td>
      <td>category:</td> <td> <input type='text' name='category'></td>
@@ -86,15 +97,6 @@ function addVideoForm() {
 _END;
 }
 
-
-// output a form to delete videos
-function delVideoForm() {
-    echo <<<_END
-<form method ='post' action='video_inventory.php&delete=true'>
-<input type='submit' value='Delete'>
-</form>
-_END;
-}
 
 
 function connectToDB(){
@@ -110,6 +112,7 @@ return $mysqli;
 }
 
 function drawVideos($mysqli){
+echo "<form action='' method='post'>";
 echo "<table border=1><tr><th>id<th>name<th>category<th>length<th>rented</tr>";
 $sql = "select id,name,category,length,rented from video_inventory";
 $result = $mysqli->query($sql);
@@ -128,11 +131,13 @@ if ($result->num_rows>0)
                     else 
                         echo "<td>checked out</td>";
                     echo "<td>";
-                    delVideoForm(); 
+                    //echo '<input type="submit" name="deleteItem" value=\''.$row[id].'\'>';
+                    echo '<input type="submit" name="'.$row[id].'" value="Delete">';
+                    //echo '<td><input type="submit" name="'.$row['id'].'" value="Delete" /></td>"';
                     echo "</td></tr>";
             }
     }
-echo "</table>";
+echo "</table></form>";
 }
 
 ?>
