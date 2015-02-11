@@ -126,9 +126,14 @@ function checkInsertions(){
             return true;
         }
     
-    else // name is NULL.  This is NOT okay.
+    else // name is NULL.  This is NOT okay if category or length are not NULL.
         {
-            echo "'Name' is a required field.";
+            if ( 
+                (isset($_POST["category"]) && $_POST["category"] != null)
+                ||
+                (isset($_POST["length"]) && $_POST["length"] != null)
+            )
+                echo "'Name' is a required field.";
         }
     
     return false;
