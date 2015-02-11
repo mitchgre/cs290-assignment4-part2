@@ -23,6 +23,21 @@ function preparedStatement($query){
     return false;
 }
 
+
+function checkAvailabilityToggle(){
+    $mysqli = connectToDB();
+    if ($id = array_search('check-out',$_POST)){
+        echo $id."<br>";
+        $query = "update video_inventory set rented = !rented where id=".$id.";";
+        preparedStatement($query);
+    } // end check-out search
+    else if ($id = array_search('check-in',$_POST)){
+        echo $id."<br>";
+        $query = "update video_inventory set rented = !rented where id=".$id.";";
+        preparedStatement($query);
+    } // end check-out search
+}
+
 // delete a row from the table with the given id
 // the alternate approach is to use hidden inputs, which might be more robust
 function checkDeletions(){
@@ -109,12 +124,12 @@ function checkInsertions(){
             // echo "Trying to add $sql";
             $result = $mysqli->query($sql);
         }
-    /*
+    
     else // name is NULL.  This is NOT okay.
         {
-            echo "You must have a name.";
+            echo "'Name' is a required field.";
         }
-    */
+    
     
 }
 
@@ -126,7 +141,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         if (! empty($_POST))
             {
                 if(!checkDeletions()) // if we're not deleting
-                    checkInsertions();
+                    if(!checkInsertions())
+                        checkAvailabilityToggle();
             } // 
     } // 
 } // end 
@@ -183,14 +199,21 @@ function drawVideos($mysqli){
                         "<td> " . $length. "</td>";
                     // "<td>" . $row["rented"]. "</tr>";
                     if ($rented == 0)
-                        echo "<td>available</td>";
+                        {
+                            echo "<td>available</td>";
+                            echo "<td>";
+                            echo '<input type="submit" name="'.$id.'" value="check-out">';
+                            echo '<input type="submit" name="'.$id.'" value="Delete">';
+                            echo "</td></tr>";
+                        }
                     else 
-                        echo "<td>checked out</td>";
-                    echo "<td>";
-                    //echo '<input type="submit" name="deleteItem" value=\''.$row[id].'\'>';
-                    echo '<input type="submit" name="'.$id.'" value="Delete">';
-                    //echo '<td><input type="submit" name="'.$row['id'].'" value="Delete" /></td>"';
-                    echo "</td></tr>";
+                        {
+                            echo "<td>checked out</td>";
+                            echo "<td>";
+                            echo '<input type="submit" name="'.$id.'" value="check-in">';
+                            echo '<input type="submit" name="'.$id.'" value="Delete">';
+                            echo "</td></tr>";
+                        }
                 }
     }
     echo "</table></form>";
