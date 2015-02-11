@@ -23,16 +23,16 @@ function preparedStatement($query){
     return false;
 }
 
-
+// toggle check-in/check-out buttons
 function checkAvailabilityToggle(){
     $mysqli = connectToDB();
     if ($id = array_search('check-out',$_POST)){
-        echo $id."<br>";
+        // echo $id."<br>";
         $query = "update video_inventory set rented = !rented where id=".$id.";";
         preparedStatement($query);
     } // end check-out search
-    else if ($id = array_search('check-in',$_POST)){
-        echo $id."<br>";
+    else if ($id = array_search('check-in',$_POST)){  // gotta be a cleaner way to do this
+        // echo $id."<br>";
         $query = "update video_inventory set rented = !rented where id=".$id.";";
         preparedStatement($query);
     } // end check-out search
@@ -123,6 +123,7 @@ function checkInsertions(){
                 "values (\"$name\",\"$category\",\"$length\");";
             // echo "Trying to add $sql";
             $result = $mysqli->query($sql);
+            return true;
         }
     
     else // name is NULL.  This is NOT okay.
@@ -130,7 +131,7 @@ function checkInsertions(){
             echo "'Name' is a required field.";
         }
     
-    
+    return false;
 }
 
 
