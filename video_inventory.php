@@ -14,18 +14,53 @@ $mysqli = connectToDB();
 drawVideos($mysqli);
 
 
+function preparedStatement($query){
+    $mysqli = connectToDB();
+    if( $sql = $mysqli->prepare($query)){
+        $sql->execute();
+        return true;
+    }
+    return false;
+}
+
 // delete a row from the table with the given id
 // the alternate approach is to use hidden inputs, which might be more robust
 function checkDeletions(){
-    $id = array_search('Delete',$_POST); // search post array for the id
     $mysqli = connectToDB();
-    // stage1: prepare
+
+    if ( isset($_POST["DeleteAll"]) && $_POST["DeleteAll"] != null){
+        // stage1: prepare
+        $query = "Truncate video_inventory ";
+        
+        // stage2: execute (no need to bind)
+        if( $sql = $mysqli->prepare($query)){
+            $sql->execute();
+            return true;
+        }
+    }
+
+    $id = array_search('Delete',$_POST); // search post array for the id
+
     $query = "delete from video_inventory ".
         "where id = ".$id;
-    if( $sql = $mysqli->prepare($query)){
-        $sql->execute();
-        
+    
+    if (preparedStatement($query)){
+        // reset counter on primary key
+        $query = "alter table video_inventory drop id";
+        if (preparedStatement($query)){
+            $query = "alter table video_inventory auto_increment = 1";
+            if (preparedStatement($query)){
+                $query = "alter table video_inventory add id".
+                    " int unsigned not null auto_increment primary key first";
+                if (preparedStatement($query)){
+                    return true;
+                }
+            }
+        }
     }
+
+
+    return false;
 }
 
 
@@ -127,7 +162,8 @@ return $mysqli;
 
 function drawVideos($mysqli){
     echo "<form action='' method='post'>";
-    echo "<table border=1><tr><th>id<th>name<th>category<th>length<th>rented</tr>";
+    echo "<table border=1><tr><th>id<th>name<th>category<th>length<th>rented";
+    echo '<th><input type="submit" name="DeleteAll" value="Delete All Videos"></tr>';
     
 // prepare statement
     $query = "select id,name,category,length,rented from video_inventory";
