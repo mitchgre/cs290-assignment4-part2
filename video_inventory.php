@@ -38,6 +38,23 @@ function checkAvailabilityToggle(){
     } // end check-out search
 }
 
+function resetIDs() {
+        // reset counter on primary key
+        $query = "alter table video_inventory drop id";
+        if (preparedStatement($query)){
+            $query = "alter table video_inventory auto_increment = 1";
+            if (preparedStatement($query)){
+                $query = "alter table video_inventory add id".
+                    " int unsigned not null auto_increment primary key first";
+                if (preparedStatement($query)){
+                    return true;
+                }
+            }
+        }
+    }
+
+
+
 // delete a row from the table with the given id
 // the alternate approach is to use hidden inputs, which might be more robust
 function checkDeletions(){
@@ -58,22 +75,9 @@ function checkDeletions(){
 
     $query = "delete from video_inventory ".
         "where id = ".$id;
-    
-    if (preparedStatement($query)){
-        // reset counter on primary key
-        $query = "alter table video_inventory drop id";
-        if (preparedStatement($query)){
-            $query = "alter table video_inventory auto_increment = 1";
-            if (preparedStatement($query)){
-                $query = "alter table video_inventory add id".
-                    " int unsigned not null auto_increment primary key first";
-                if (preparedStatement($query)){
-                    return true;
-                }
-            }
-        }
-    }
 
+    if (preparedStatement($query))    
+        resetIDs($mysqli);
 
     return false;
 }
@@ -123,6 +127,7 @@ function checkInsertions(){
                 "values (\"$name\",\"$category\",\"$length\");";
             // echo "Trying to add $sql";
             $result = $mysqli->query($sql);
+            resetIDs();
             return true;
         }
     
@@ -182,17 +187,41 @@ if ($mysqli->connect_errno)
 return $mysqli;
 }
 
+
+/*
+  search database for categories.
+  Return an array of categories that can be used to display to user 
+  what categories are in the database. 
+ */
+function getCategories($mysqli){
+    $categories = []; // empty container array
+    $query = "select distinct category from video_inventory where category!=''";
+    
+    if ($sql=$mysqli->prepare($query))
+        {
+            $sql->execute();
+            // bind results
+            $sql->bind_result($category);
+            while($sql->fetch()) // loop over results and push into array
+                array_push($categories,$category);
+            // print_r($categories);
+            return $categories;
+        }
+}
+
 function drawVideos($mysqli){
+    $categories = getCategories($mysqli);
     echo "<form action='' method='post'>";
     echo "<table border=1><tr>".
         "<th>id<th>name".
         "<th>".
-        // replace this with a string returned from a function that parses categories from a mysql query
-        "<select><option value='All Categories'>All Categories</option>".
-        "<option value='Comedies'>Comedies</option>".
-        "<option value='Westerns'>Westerns</option>".
-        "<option value='Romance'>Romance</option>".
-        "</select>".
+        "<select><option value='All Categories'>All Categories</option>";
+    // replace this with a string returned from a function that parses categories from a mysql query
+    for ($i=0; $i<count($categories); $i++)
+        {
+            echo "<option value='$categories[$i]'>$categories[$i]</option>";
+        }
+    echo "</select>".
         "<th>".
         "length<th>rented";
     echo '<th><input type="submit" name="DeleteAll" value="Delete All Videos"></tr>';
@@ -205,7 +234,7 @@ function drawVideos($mysqli){
     
 // bind results
         $sql->bind_result($id,$name,$category,$length,$rented);
-    
+        // check if category is in filter
 
             while($sql->fetch())
                 {
