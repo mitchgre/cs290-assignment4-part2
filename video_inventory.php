@@ -40,18 +40,19 @@ function checkAvailabilityToggle(){
 
 function resetIDs() {
         // reset counter on primary key
-        $query = "alter table video_inventory drop id";
+    $mysqli = connectToDB();
+    $query = "alter table video_inventory drop id";
+    if (preparedStatement($query)){
+        $query = "alter table video_inventory auto_increment = 1";
         if (preparedStatement($query)){
-            $query = "alter table video_inventory auto_increment = 1";
+            $query = "alter table video_inventory add id".
+                " int unsigned not null auto_increment primary key first";
             if (preparedStatement($query)){
-                $query = "alter table video_inventory add id".
-                    " int unsigned not null auto_increment primary key first";
-                if (preparedStatement($query)){
-                    return true;
-                }
+                return true;
             }
         }
     }
+}
 
 
 
@@ -122,12 +123,13 @@ function checkInsertions(){
                 }
             
             $mysqli = connectToDB();
-            $sql = "insert into video_inventory ".
+            $query = "insert into video_inventory ".
                 "(name,category,length) ".
                 "values (\"$name\",\"$category\",\"$length\");";
             // echo "Trying to add $sql";
-            $result = $mysqli->query($sql);
-            resetIDs();
+            //$result = $mysqli->query($sql);
+            if (preparedStatement($query))    
+                resetIDs();
             return true;
         }
     
