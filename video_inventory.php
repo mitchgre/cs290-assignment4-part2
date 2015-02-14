@@ -184,7 +184,17 @@ return $mysqli;
 
 function drawVideos($mysqli){
     echo "<form action='' method='post'>";
-    echo "<table border=1><tr><th>id<th>name<th>category<th>length<th>rented";
+    echo "<table border=1><tr>".
+        "<th>id<th>name".
+        "<th>".
+        // replace this with a string returned from a function that parses categories from a mysql query
+        "<select><option value='All Categories'>All Categories</option>".
+        "<option value='Comedies'>Comedies</option>".
+        "<option value='Westerns'>Westerns</option>".
+        "<option value='Romance'>Romance</option>".
+        "</select>".
+        "<th>".
+        "length<th>rented";
     echo '<th><input type="submit" name="DeleteAll" value="Delete All Videos"></tr>';
     
 // prepare statement
