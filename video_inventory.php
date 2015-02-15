@@ -84,6 +84,11 @@ function checkDeletions(){
 }
 
 
+function checkGenreFilter(){
+    if ( isset($_POST["genreFilter"]) && $_POST["genreFilter"] != null && $_POST["genreFilter"] != '')
+        echo "genreFilter=".$_POST["genreFilter"];
+}
+
 function checkInsertions(){
     if ( isset($_POST["name"]) && $_POST["name"] != null && $_POST["name"] != '')
         {
@@ -128,9 +133,12 @@ function checkInsertions(){
                 "values (\"$name\",\"$category\",\"$length\");";
             // echo "Trying to add $sql";
             //$result = $mysqli->query($sql);
-            if (preparedStatement($query))    
-                resetIDs();
-            return true;
+            if (preparedStatement($query)) 
+                {
+                    // clsoe $mysqli connection
+                    //resetIDs();
+                    return true;
+                }
         }
     
     else // name is NULL.  This is NOT okay if category or length are not NULL.
@@ -155,7 +163,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
             {
                 if(!checkDeletions()) // if we're not deleting
                     if(!checkInsertions())
-                        checkAvailabilityToggle();
+                        checkGenreFilter();
+                //checkAvailabilityToggle();
             } // 
     } // 
 } // end 
@@ -211,14 +220,43 @@ function getCategories($mysqli){
         }
 }
 
+
+function drawVideo($id,$name,$category,$length,$rented){
+    echo "<tr><td> " . $id. "</td>".
+        "<td>" . $name. "</td>".
+        "<td>". $category. "</td>".
+        "<td> " . $length. "</td>";
+    // "<td>" . $row["rented"]. "</tr>";
+    if ($rented == 0)
+        {
+            echo "<td>available</td>";
+            echo "<td>";
+            echo '<input type="submit" name="'.$id.'" value="check-out">';
+            echo '<input type="submit" name="'.$id.'" value="Delete">';
+            echo "</td></tr>";
+        }
+    else 
+        {
+            echo "<td>checked out</td>";
+            echo "<td>";
+            echo '<input type="submit" name="'.$id.'" value="check-in">';
+            echo '<input type="submit" name="'.$id.'" value="Delete">';
+            echo "</td></tr>";
+        }
+}
+
 function drawVideos($mysqli){
     $categories = getCategories($mysqli);
     echo "<form action='' method='post'>";
     echo "<table border=1><tr>".
         "<th>id<th>name".
         "<th>".
-        "<select><option value='All Categories'>All Categories</option>";
-    // replace this with a string returned from a function that parses categories from a mysql query
+        // this dropdown will POST value back to this page.   Need to get the POST value of genreFilter ($_POST['genreFilter').
+        //"<table><tr><td>".
+        "<select name='genreFilter' onchange='this.form.submit()'>".
+        "<option value='All Categories'>All Categories</option>";
+
+    // fill dropdown html select options with categories from database
     for ($i=0; $i<count($categories); $i++)
         {
             echo "<option value='$categories[$i]'>$categories[$i]</option>";
@@ -240,26 +278,11 @@ function drawVideos($mysqli){
 
             while($sql->fetch())
                 {
-                    echo "<tr><td> " . $id. "</td>".
-                        "<td>" . $name. "</td>".
-                        "<td>". $category. "</td>".
-                        "<td> " . $length. "</td>";
-                    // "<td>" . $row["rented"]. "</tr>";
-                    if ($rented == 0)
+                    // filter results from $_POST['genreFilter'] dropdown
+                    //if (in_array($category,$categories)) // this will filter out results with no category which is not what I want
+                    if (1)  // need to compare $category with $categoryFromFilterDropdown which is not set yet
                         {
-                            echo "<td>available</td>";
-                            echo "<td>";
-                            echo '<input type="submit" name="'.$id.'" value="check-out">';
-                            echo '<input type="submit" name="'.$id.'" value="Delete">';
-                            echo "</td></tr>";
-                        }
-                    else 
-                        {
-                            echo "<td>checked out</td>";
-                            echo "<td>";
-                            echo '<input type="submit" name="'.$id.'" value="check-in">';
-                            echo '<input type="submit" name="'.$id.'" value="Delete">';
-                            echo "</td></tr>";
+                            drawVideo($id,$name,$category,$length,$rented);
                         }
                 }
     }
