@@ -85,8 +85,10 @@ function checkDeletions(){
 
 
 function checkGenreFilter(){
-    if ( isset($_POST["genreFilter"]) && $_POST["genreFilter"] != null && $_POST["genreFilter"] != '')
-        echo "genreFilter=".$_POST["genreFilter"];
+    if ( isset($_POST["genreFilter"]) && 
+    $_POST["genreFilter"] != null && 
+    $_POST["genreFilter"] != '')
+        ;//echo "genreFilter=".$_POST["genreFilter"];
 }
 
 function checkInsertions(){
@@ -252,17 +254,25 @@ function drawVideos($mysqli){
         "<th>id<th>name".
         "<th>".
         // this dropdown will POST value back to this page.   Need to get the POST value of genreFilter ($_POST['genreFilter').
-        //"<table><tr><td>".
+        "<table><tr><td>".
         "<select name='genreFilter' onchange='this.form.submit()'>".
-        "<option value='All Categories'>All Categories</option>";
-
+         //"<option>Select Category</option>".
+	 "<option>All Categories</option>";
     // fill dropdown html select options with categories from database
-    for ($i=0; $i<count($categories); $i++)
+	for ($i=0; $i<count($categories); $i++)
         {
-            echo "<option value='$categories[$i]'>$categories[$i]</option>";
+            echo "<option>$categories[$i]</option>";
         }
-    echo "</select>".
-        "<th>".
+    echo "</select>";
+    if (isset($_POST["genreFilter"]) && 
+    $_POST["genreFilter"] != null && 
+    $_POST["genreFilter"] != '')
+        {
+            echo "<tr><td><b>" . $_POST["genreFilter"] . "</b></td></tr>" ;
+        }
+    echo "</table>";
+
+    echo "<th>".
         "length<th>rented";
     echo '<th><input type="submit" name="DeleteAll" value="Delete All Videos"></tr>';
     
@@ -280,7 +290,13 @@ function drawVideos($mysqli){
                 {
                     // filter results from $_POST['genreFilter'] dropdown
                     //if (in_array($category,$categories)) // this will filter out results with no category which is not what I want
-                    if (1)  // need to compare $category with $categoryFromFilterDropdown which is not set yet
+                    if (strcmp($_POST['genreFilter'],'All Categories') == 0 ||
+			!isset($_POST['genreFilter'])
+		    )  
+                        {
+                            drawVideo($id,$name,$category,$length,$rented);
+                        }
+                    else if (strcmp($_POST['genreFilter'],$category) == 0)
                         {
                             drawVideo($id,$name,$category,$length,$rented);
                         }
