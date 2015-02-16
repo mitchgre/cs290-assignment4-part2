@@ -56,7 +56,7 @@ function reloadPage(value){
 function addVideo(){
     var name = document.getElementById('Name_id');
     var category = document.getElementById('category_id');
-    var length = document.getElementById('length_id').value; console.log(length);
+    var length = document.getElementById('length_id'); console.log(length);
     
     console.log(name.value,category.value,length.value);
 
@@ -64,15 +64,19 @@ function addVideo(){
     {
 	alert("Name field cannot be empty.");
     }
-    else if (length != '' && isNaN(length))
+    else if (length.value != '' && isNaN(length.value))
     {
 	alert("Length must be a number.");
     }
     else 
     {
-	sendRequest('addVideo=true&name='+name.value+'&category='+category.value+'&length='+length,getVideos);
+	sendRequest('addVideo=true&name='+name.value+
+		    '&category='+category.value+
+		    '&length='+length.value,reloadPage);
 		    //displayVideos);
     }
+    //reloadPage();
+    //getCategories();
 }
 
 
