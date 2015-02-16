@@ -7,11 +7,14 @@
 
 
 <?php
+session_start();
 
-checkPostRequests();
 addVideoForm();
-$mysqli = connectToDB();
-drawVideos($mysqli);
+checkRequests();
+//drawVideos('All Categories');
+
+//$mysqli = connectToDB();
+//drawVideos($mysqli);
 
 
 function preparedStatement($query){
@@ -25,17 +28,26 @@ function preparedStatement($query){
 
 // toggle check-in/check-out buttons
 function checkAvailabilityToggle(){
-    $mysqli = connectToDB();
-    if ($id = array_search('check-out',$_POST)){
-        // echo $id."<br>";
-        $query = "update video_inventory set rented = !rented where id=".$id.";";
-        preparedStatement($query);
-    } // end check-out search
-    else if ($id = array_search('check-in',$_POST)){  // gotta be a cleaner way to do this
-        // echo $id."<br>";
-        $query = "update video_inventory set rented = !rented where id=".$id.";";
-        preparedStatement($query);
-    } // end check-out search
+  $mysqli = connectToDB();
+  if ($id = array_search('check-out',$_POST)){
+    // echo $id."<br>";
+    $query = "update video_inventory set rented = !rented where id=".$id.";";
+    if (preparedStatement($query))
+        {
+            echo "<script>location.reload();</script>";
+            return true;
+        }
+  } // end check-out search
+  else if ($id = array_search('check-in',$_POST)){  // gotta be a cleaner way to do this
+    // echo $id."<br>";
+    $query = "update video_inventory set rented = !rented where id=".$id.";";
+    if ( preparedStatement($query))
+        {
+            echo "<script>location.reload();</script>";
+            return true;
+        }
+  } // end check-out search
+  return false;
 }
 
 function resetIDs() {
@@ -68,6 +80,7 @@ function checkDeletions(){
         // stage2: execute (no need to bind)
         if( $sql = $mysqli->prepare($query)){
             $sql->execute();
+            echo "<script>location.reload();</script>";
             return true;
         }
     }
@@ -84,51 +97,14 @@ function checkDeletions(){
 }
 
 
-function checkGenreFilter(){
-    if ( isset($_POST["genreFilter"]) && 
-    $_POST["genreFilter"] != null && 
-    $_POST["genreFilter"] != '')
-        ;//echo "genreFilter=".$_POST["genreFilter"];
-}
-
-function checkInsertions(){
-    if ( isset($_POST["name"]) && $_POST["name"] != null && $_POST["name"] != '')
+// check if parameters to insert a movie are valid
+function validateInsertion($name,$category,$length){
+    if ( empty($name) && !(empty($category) || empty($length))) // if category or length are set but name is not, that's not okay
         {
-            if ( isset($_POST["category"]) && $_POST["category"] != null)
-                {
-                    if ( isset($_POST["length"]) && $_POST["length"] != null)
-                        {
-                            // everything is set here. 
-                            // just need to tell mysql 
-                            $name = $_POST["name"];
-                            $category = $_POST["category"];
-                            $length = $_POST["length"];
-                            
-                        }
-                    else // length is NULL.  This is okay.
-                        {
-                            $name = $_POST["name"];
-                            $category = $_POST["category"];
-                            $length = "";
-                        }
-                }
-            else // category is NULL.  This is okay.
-                {
-                    if ( isset($_POST["length"]) && $_POST["length"] != null)
-                        { 
-                            $name = $_POST["name"];
-                            $category = "";
-                            $length = $_POST["length"];
-                        }
-                    else // length is NULL.  This is okay.
-                        {
-                            $name = $_POST["name"];
-                            $category = "";
-                            $length = "";
-                            
-                        }
-                }
-            
+            echo "'Name' is a required field.";
+        }
+    else if ( !empty($name) )
+        {
             $mysqli = connectToDB();
             $query = "insert into video_inventory ".
                 "(name,category,length) ".
@@ -137,38 +113,89 @@ function checkInsertions(){
             //$result = $mysqli->query($sql);
             if (preparedStatement($query)) 
                 {
-                    // clsoe $mysqli connection
+                    // close $mysqli connection
+                    mysqli_close($mysqli);
                     //resetIDs();
                     return true;
                 }
-        }
-    
-    else // name is NULL.  This is NOT okay if category or length are not NULL.
-        {
-            if ( 
-                (isset($_POST["category"]) && $_POST["category"] != null)
-                ||
-                (isset($_POST["length"]) && $_POST["length"] != null)
-            )
-                echo "'Name' is a required field.";
+
         }
     
     return false;
 }
 
+function validateGenres($genreFilter){
+    //if (!empty($genreFilter))
+};
+
+// http://community.developer.authorize.net/t5/The-Authorize-Net-Developer-Blog/Handling-Online-Payments-Part-2-Reading-In-And-Sanitizing/ba-p/9446
+function sanitize($value)
+{
+    return trim(strip_tags($value));
+}
 
 // handle post requests via mysql
-function checkPostRequests(){
-if ($_SERVER['REQUEST_METHOD'] === 'POST') 
-    {
+function checkRequests(){
+  if ($_SERVER['REQUEST_METHOD'] === 'POST') 
+  {
+      //print_r($_POST);
+      // sanitize values from forms
+      if (!empty($_POST['name']))
+          $name = sanitize($_POST['name']);
+      else
+          $name = '';
+      if (!empty($_POST['category']))
+          $category = sanitize($_POST['category']);
+      else
+          $category = '';
+      if (!empty($_POST['length']))
+          $length = sanitize($_POST['length']);
+      else
+          $length = '';
+      if (!empty($_POST['genreFilter']))
+          $genreFilter = sanitize($_POST['genreFilter']);
+      else
+          $genreFilter = 'All Categories';
+      /*
+      if (!empty($_POST['DeleteAll']))
+          $deleteAll = sanitize($_POST['DeleteAll']);
+      if (!empty($_POST['Delete']))
+          $Delete = sanitize($_POST['Delete']);
+      */
+      
+      // validate data
+      
+      if (!empty($genreFilter))
+          drawVideos($genreFilter);// validateGenres($genreFilter);
+      else
+          drawVideos('All Categories');// validateGenres($genreFilter);
+      
+      if (!empty($name)) 
+          validateInsertion($name,$category,$length);
+      checkDeletions();
+      checkAvailabilityToggle();
+      // header("Location: video_inventory_unsanitary.php&restart=true",true);
+      //echo "<script>location.reload();</script>";
+      //if (empty
+      //validateDeletions($deleteAll,$Delete);
+      //validCheckInCheckOut();
+      
+      
+
+      /*
         if (! empty($_POST))
-            {
-                if(!checkDeletions()) // if we're not deleting
-                    if(!checkInsertions())
-                        checkGenreFilter();
-                //checkAvailabilityToggle();
-            } // 
-    } // 
+        {
+        print_r($_POST);
+        checkGenreFilter();
+        checkAvailabilityToggle();
+        if(!checkDeletions()) // if we're not deleting
+        if(!checkInsertions())
+                ;//checkAvailabilityToggle();
+                } //
+      */
+  } // 
+  else
+      drawVideos('All Categories');
 } // end 
 
 
@@ -247,7 +274,8 @@ function drawVideo($id,$name,$category,$length,$rented){
         }
 }
 
-function drawVideos($mysqli){
+function drawVideos($genreFilter){
+    $mysqli = connectToDB();
     $categories = getCategories($mysqli);
     echo "<form action='' method='post'>";
     echo "<table border=1><tr>".
@@ -256,7 +284,7 @@ function drawVideos($mysqli){
         // this dropdown will POST value back to this page.   Need to get the POST value of genreFilter ($_POST['genreFilter').
         "<table><tr><td>".
         "<select name='genreFilter' onchange='this.form.submit()'>".
-         //"<option>Select Category</option>".
+         "<option>Select Category</option>".
 	 "<option>All Categories</option>";
     // fill dropdown html select options with categories from database
 	for ($i=0; $i<count($categories); $i++)
@@ -264,11 +292,9 @@ function drawVideos($mysqli){
             echo "<option>$categories[$i]</option>";
         }
     echo "</select>";
-    if (isset($_POST["genreFilter"]) && 
-    $_POST["genreFilter"] != null && 
-    $_POST["genreFilter"] != '')
+    if (!empty($genreFilter))
         {
-            echo "<tr><td><b>" . $_POST["genreFilter"] . "</b></td></tr>" ;
+            echo "<tr><td><b>" . $genreFilter . "</b></td></tr>" ;
         }
     echo "</table>";
 
@@ -285,22 +311,26 @@ function drawVideos($mysqli){
 // bind results
         $sql->bind_result($id,$name,$category,$length,$rented);
         // check if category is in filter
-
-            while($sql->fetch())
-                {
-                    // filter results from $_POST['genreFilter'] dropdown
-                    //if (in_array($category,$categories)) // this will filter out results with no category which is not what I want
-                    if (strcmp($_POST['genreFilter'],'All Categories') == 0 ||
-			!isset($_POST['genreFilter'])
-		    )  
-                        {
-                            drawVideo($id,$name,$category,$length,$rented);
-                        }
-                    else if (strcmp($_POST['genreFilter'],$category) == 0)
-                        {
-                            drawVideo($id,$name,$category,$length,$rented);
-                        }
-                }
+        
+        while($sql->fetch())
+            {
+                // filter results from $_POST['genreFilter'] dropdown
+                if (!empty($genreFilter))
+                    {
+                        if (strcmp($genreFilter,'All Categories') == 0 ||
+                        strcmp($genreFilter,'Select Category') == 0 )
+                            {
+                                drawVideo($id,$name,$category,$length,$rented);
+                            }
+                        else if (strcmp($genreFilter,$category) == 0)
+                            {
+                                drawVideo($id,$name,$category,$length,$rented);
+                            }
+                    }
+                else
+                    drawVideo($id,$name,$category,$length,$rented);
+                        
+            }
     }
     echo "</table></form>";
 }
