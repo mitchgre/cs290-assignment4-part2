@@ -70,7 +70,7 @@ function addVideo(){
     }
     else 
     {
-	sendRequest('addVideo=true&name='+name.value+'&category='+category.value+'&length='+length.value,getVideos);
+	sendRequest('addVideo=true&name='+name.value+'&category='+category.value+'&length='+length,getVideos);
 		    //displayVideos);
     }
 }
