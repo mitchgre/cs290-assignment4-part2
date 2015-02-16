@@ -54,9 +54,9 @@ function reloadPage(value){
 }
 
 function addVideo(){
-    var name = document.getElementById('name');
-    var category = document.getElementById('category');
-    var length = document.getElementById('length');
+    var name = document.getElementById('Name_id');
+    var category = document.getElementById('category_id');
+    var length = document.getElementById('length_id').value; console.log(length);
     
     console.log(name.value,category.value,length.value);
 
@@ -64,7 +64,7 @@ function addVideo(){
     {
 	alert("Name field cannot be empty.");
     }
-    else if (isNaN(length))
+    else if (length != '' && isNaN(length))
     {
 	alert("Length must be a number.");
     }
