@@ -6,20 +6,22 @@
   <body>
 
 
-    <form method ='post' action='process_video_inventory.php'>
+    <!-- <form method ='post' action='process_video_inventory.php'>  -->
       <table name='addBar'>
 	<tr>
-	  <td colspan='2' align='center'> <input type='submit' value='Add Video'></td>
-	  <td>name:</td> <td> <input type='text' name='name'></td>
-	  <td>category:</td> <td> <input type='text' name='category'></td>
-	  <td>length:</td> <td> <input type='text' name='length'></td>
+	  <td colspan='2' align='center'> 
+	    <input type='submit' value='Add Video' onClick='addVideo()'>
+	  </td>
+	  <td>name:</td> <td> <input type='text' name='name' id='name'></td>
+	  <td>category:</td> <td> <input type='text' name='category' id='category'></td>
+	  <td>length:</td> <td> <input type='text' name='length' id='length'></td>
 	</tr>
       </table>
-    </form>
+
       
-    <form action='' method='post'>
+
       <table border='1' id='Results'>
-	<thead>
+	<thead id='resultsHead'>
 	  <tr>
             <th>id</th>
 	    <th>name</th>
@@ -27,7 +29,7 @@
 	      <table>
 		<tr>
 		  <td>
-		    <select name='genreFilter' onchange='this.form.submit()'>
+		    <select name='genreFilter' id='genreFilter' onchange='filterVideos()'>
 		      <option>Select Category</option>
 		      <option>All Categories</option>
 		    </select>
@@ -37,7 +39,7 @@
 	    </th>
 	    <th>length</th>
 	    <th>rented</th>
-	    <th><input type='submit' name='DeleteAll' value='Delete All Videos'</th>
+	    <th><input type='submit' name='DeleteAll' value='Delete All Videos' onClick='deleteAllVideos()'</th>
 	  </tr>
 	</thead>
 	<tbody id='resultsBody'>

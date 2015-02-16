@@ -3,20 +3,102 @@
 //echo json_encode( $_POST);
 
 if(isset($_POST['getAllVideos']))
-    //echo ( json_encode(getAllVideos()));
     echo getAllVideos();
-    //echo 'nonempty';
-else
-    echo 'empty';
+else if (isset($_POST['getCategories']))
+    echo getCategories();
+else if (isset($_POST['deleteVideo']))
+    echo deleteVideo($_POST['deleteVideo']);
+else if (isset($_POST['deleteAllVideos']))
+    echo deleteAllVideos();
+else if (isset($_POST['toggleVideo']))
+    echo toggleVideo($_POST['toggleVideo']);
+else if (isset($_POST['addVideo']))
+    echo addVideo($_POST['name'],$_POST['category'],$_POST['length']);
+
+
+/*
+  search database for categories.
+  Return an array of categories that can be used to display to user 
+  what categories are in the database. 
+ */
+function getCategories(){
+    $mysqli = connectToDB();
+    $categories = []; // empty container array
+    $query = "select distinct category from video_inventory where category!=''";
+    
+    if ($sql=$mysqli->prepare($query))
+        {
+            $sql->execute();
+            // bind results
+            $sql->bind_result($category);
+            while($sql->fetch()) // loop over results and push into array
+                array_push($categories,$category);
+            // print_r($categories);
+            return json_encode($categories);
+        }
+}
+
+
+function addVideo($name,$category,$length){
+    $mysqli = connectToDB();
+    $query = "insert into video_inventory ".
+        "(name,category,length) ".
+        "values (\"$name\",\"$category\",\"$length\");";
+    // echo "Trying to add $sql";
+    //$result = $mysqli->query($sql);
+    if (preparedStatement($query)) 
+        {
+            return json_encode("result processed");
+        }
+}
+
+function toggleVideo($id){
+    $mysqli = connectToDB();
+
+    $query = "update video_inventory ".
+        "set rented = !rented where id = ".$id;
+
+    if ($sql=$mysqli->prepare($query))
+        {
+            
+            $sql->execute();
+            mysqli_close($mysqli);
+            return json_encode('toggled '+$id);
+        }
+}
+
+
+function deleteAllVideos(){
+    $mysqli = connectToDB();
+   // stage1: prepare
+    $query = "Truncate video_inventory ";
+    
+    // stage2: execute (no need to bind)
+    if( $sql = $mysqli->prepare($query)){
+        $sql->execute();
+        mysqli_close($mysqli);
+        return json_encode('Deleted All Videos');
+    }
+}
+
+function deleteVideo($id){
+    $mysqli = connectToDB();
+
+    $query = "delete from video_inventory ".
+        "where id = ".$id;
+
+    if ($sql=$mysqli->prepare($query))
+        {
+            
+            $sql->execute();
+            mysqli_close($mysqli);
+            return 'deleted '+$id;
+        }
+}
 
 function getAllVideos()
 {
-    $ids = [];
-    $names = [];
-    $categories = [];
-    $lengths = [];
-    $renteds = [];
-    
+
     $entries = [];
 
     $mysqli = connectToDB();
@@ -43,15 +125,7 @@ function getAllVideos()
                     array_push($entries, $entry);
                 }
         }
-    //echo $entry;
-    /*
-    $entry = [
-        json_encode($ids),
-        json_encode($names),
-        json_encode($categories),
-        json_encode($lengths),
-        json_encode($renteds)];
-    */
+    mysqli_close($mysqli);
     return json_encode($entries);
 }
 
@@ -67,6 +141,19 @@ function connectToDB(){
         }
     return $mysqli;
 }
+
+function preparedStatement($query){
+    $mysqli = connectToDB();
+    if( $sql = $mysqli->prepare($query)){
+        $sql->execute();
+        mysqli_close($mysqli);
+        return true;
+    }
+    mysqli_close($mysqli);
+    return false;
+    
+}
+
 
 function resetIDs() {
         // reset counter on primary key
