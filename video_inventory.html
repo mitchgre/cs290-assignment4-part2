@@ -18,26 +18,31 @@
     </form>
       
     <form action='' method='post'>
-      <table border=1><tr>
-        <th>id</th>
-	<th>name</th>
-	<th>
-	  <table>
-	    <tr>
-	      <td>
-		<select name='genreFilter' onchange='this.form.submit()'>
-		  <option>Select Category</option>
-		  <option>All Categories</option>
-		</select>
-	      </td>
-	    </tr>
-	  </table>
-	</th>
-	<th>length</th>
-	<th>rented</th>
-	<th><input type='submit' name='DeleteAll' value='Delete All Videos'</th>
-      </tr>
-	
+      <table border='1' id='Results'>
+	<thead>
+	  <tr>
+            <th>id</th>
+	    <th>name</th>
+	    <th>
+	      <table>
+		<tr>
+		  <td>
+		    <select name='genreFilter' onchange='this.form.submit()'>
+		      <option>Select Category</option>
+		      <option>All Categories</option>
+		    </select>
+		  </td>
+		</tr>
+	      </table>
+	    </th>
+	    <th>length</th>
+	    <th>rented</th>
+	    <th><input type='submit' name='DeleteAll' value='Delete All Videos'</th>
+	  </tr>
+	</thead>
+	<tbody id='resultsBody'>
+	</tbody>
+      </table>
 
 </body>
 </html>
