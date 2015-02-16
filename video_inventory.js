@@ -64,6 +64,10 @@ function addVideo(){
     {
 	alert("Name field cannot be empty.");
     }
+    else if (isNaN(length))
+    {
+	alert("Length must be a number.");
+    }
     else 
     {
 	sendRequest('addVideo=true&name='+name.value+'&category='+category.value+'&length='+length.value,getVideos);
